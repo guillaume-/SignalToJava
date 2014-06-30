@@ -64,9 +64,9 @@ type ref = {
 		| _ -> raise (Clock_Error("^+, ^-, ^* used to set clock but with incompatible operations"))
 
 
-	let compute_threads res assi ks =
-		let rec var_dependences assi ks res =
-			let rec
+	let compute_threads res assi ks = []
+(*		let rec var_dependences assi ks res =
+			let rec*)
 	
 
 	let apl_proced_decla s pn pi po = {
