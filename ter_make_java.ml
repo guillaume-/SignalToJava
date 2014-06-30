@@ -37,6 +37,38 @@ type ref = {
 		v_valuesPassedUsed = [];
 	}
 
+	let rec exp_to_kons = function
+		SignalAtom(id) -> K_V(id)
+		| ClockPlus(e1, e2) -> K_Bin_op(exp_to_kons e1, "^+", exp_to_kons e2)
+		| ClockMinus(e1, e2) -> K_Bin_op(exp_to_kons e1, "^-", exp_to_kons e2)
+		| ClockTimes(e1, e2) -> K_Bin_op(exp_to_kons e1, "^*", exp_to_kons e2)
+		| _ -> raise (Clock_Error("^+, ^-, ^* used to set clock but with incompatible operations"))
+
+	let rec exp_to_exp = function
+		IntegerConstant(i) -> V(string_of_int i)
+		| EnumVariantAtom(id) -> V(id)
+		| SignalAtom(id) -> V(id)
+		| WhenNotAtom(id) -> Una_op("when not", V(id))
+		| NotAtom(id) -> Una_op("not", V(id))
+		| WhenAtom(id) -> Una_op("when", V(id))
+		| When(e1, e2) -> Bin_op(exp_to_exp e1, "when", exp_to_exp e2)
+		| EqualityAtom(e1, e2) -> Bin_op(exp_to_exp e1, "=", exp_to_exp e2)
+		| Delay(e1, e2) -> Bin_op(exp_to_exp e1, "$1 init ", exp_to_exp e2)
+		| Default(e1, e2) -> Bin_op(exp_to_exp e1, "default", exp_to_exp e2)
+		| AndExp(e1, e2) -> Bin_op(exp_to_exp e1, "&&", exp_to_exp e2)
+		| OrExp(e1, e2) -> Bin_op(exp_to_exp e1, "||", exp_to_exp e2)
+		| Plus(e1, e2) -> Bin_op(exp_to_exp e1, "+", exp_to_exp e2)
+		| Minus(e1, e2) -> Bin_op(exp_to_exp e1, "-", exp_to_exp e2)
+		| Times(e1, e2) -> Bin_op(exp_to_exp e1, "*", exp_to_exp e2)
+		| FunctionCall(id, sigL) -> Call(id, List.map (exp_to_exp) sigL)
+		| _ -> raise (Clock_Error("^+, ^-, ^* used to set clock but with incompatible operations"))
+
+
+	let compute_threads res assi ks =
+		let rec var_dependences assi ks res =
+			let rec
+	
+
 	let apl_proced_decla s pn pi po = {
 		s with
 		res = { 	s.res with
@@ -74,4 +106,21 @@ type ref = {
 		kons = (lsn, K_Una_op(ck, K_V(rsn)))::s.kons
 	}
 
-	let apl_assign s asn ae = s
+	let apl_assign s asn ae = match(ae)with
+		ClockPlus(_)
+		| ClockMinus(_)
+		| ClockTimes(_) -> {
+			s with
+			kons = (asn, exp_to_kons ae)::s.kons
+		}
+		| _ -> {
+			s with
+			assigns = (asn, exp_to_exp ae)::s.assigns
+		}
+
+	let apl_spec s pl tdl pdl = {
+		s with
+		res = { s.res with
+				j_threads = compute_threads s.res s.assigns s.kons
+		}
+	}
