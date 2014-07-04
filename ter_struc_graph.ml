@@ -10,7 +10,7 @@ type in_port = {
 and out_port = {
 	out_name : string;
 	out_thread_num : int; (* while not treated -1 *)
-	link : Some out_port; (* if None end of a thread else compute the out_port *)
+	link : out_port option; (* if None end of a thread else compute the out_port *)
 	transitive_links : out_port list; (* *)
 	waited : bool; (* if true we'll have to notifyAll *)
 }
