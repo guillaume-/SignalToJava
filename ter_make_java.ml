@@ -7,6 +7,10 @@ open Ter_iterateurs
 open Ter_identite_p
 open Ter_struc_java
 
+(*	Module permettant de convertir une structure spécification telle que proposée par l'INRIA en structure java destinée à coder du Java
+	On suppose la transformation NoSubmodule déjà appliquée sur la spécification en entrée.
+*)
+
 type ref = {
 	spec: specification;
 	res: java;
@@ -67,7 +71,6 @@ type ref = {
 	let compute_threads res assi ks = []
 (*		let rec var_dependences assi ks res =
 			let rec*)
-	
 
 	let apl_proced_decla s pn pi po = {
 		s with
