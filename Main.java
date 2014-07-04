@@ -1,19 +1,17 @@
 package main;
 
-import java.util.ArrayList;
-import java.util.List;
+import thread.T0;
+import thread.T1;
+import thread.thread;
+import data.GlobalData;
 
-import thread.SigThread;
-import data.DataStruc;
-import usable.Usable;
-
-public class Main {
-	public static void main(String[] args){
-		DataStruc d = new DataStruc(1, 1);
-		List<SigThread> l = new ArrayList<SigThread>();
-		for(int i=0; i<3; i++)
-			l.add(new SigThread(d, i));
-		for(SigThread t : l)
-			t.start();
+public class Main{
+	public static void main(String[]args){
+		GlobalData data = new GlobalData();
+		thread t0 = new T0(0, data), t1 = new T1(1, data);
+		data.add_thread(t0);
+		data.add_thread(t1);
+		t0.start();
+		t1.start();
 	}
 }
