@@ -3,7 +3,7 @@
 type variable = {
 	v_type : string;
 	v_name : string;
-(* 	v_usage : direction; pour faciliter le traitement plutot 3 listes différentes*)
+(* 	v_usage : direction; pour faciliter le traitement -> 3 listes différentes*)
 	v_valuesPassedUsed : string list;
 	(* usage de la variable à t-1,
 	   ce qui implique la création de variables en t-1
@@ -30,8 +30,11 @@ type enum = {
 }
 
 type thread = {
+	t_id : int; (* commence à 0 <=> place dans la liste *)
+	t_before_priority : int list;
+	t_after : bool;
 	t_variables : variable list; (* in, out, local *)
-	t_exp : (string*expression) list; (* plusieurs si cas séquentiel *)
+	t_assigns : (string*expression) list; (* plusieurs si cas séquentiel *)
 	t_const : (string*konstraint) list;
 }
 
