@@ -11,6 +11,7 @@ type variable = {
 	   toute variable ayant de base un nom = nomOrigine^"0",
 	   il ne pourra pas exister de variable de même nom
 	*)
+	v_is_syn : bool;
 }
 
 type konstraint =
@@ -30,10 +31,9 @@ type enum = {
 }
 
 type thread = {
+	t_inits : variable list; (* portée locale *)
+	t_others : variable list; (* portée locale *)
 	t_id : int; (* commence à 0 <=> place dans la liste *)
-	t_before_priority : int list;
-	t_after : bool;
-	t_variables : variable list; (* in, out, local *)
 	t_assigns : (string*expression) list; (* plusieurs si cas séquentiel *)
 	t_const : (string*konstraint) list;
 }
@@ -47,9 +47,9 @@ type procedure = {
 type java = {
 	j_enumT : enum list; (* sauvegarde des types énumérés *)
 	j_procedures : procedure list; (* sauvegarde des procedure à prédéfinir dans Usable.java *)
-	j_ins : variable list;
-	j_outs : variable list;
-	j_locals : variable list;
+	j_ins : variable list; (* portée globale *)
+	j_outs : variable list; (* portée globale *)
+	j_locals : variable list; (* portée globale *)
 	j_threads : thread list;
 	j_nbThreads : int;
 	(* souvent appelé : diminue la complexité plutot que List.length j_threads *)
