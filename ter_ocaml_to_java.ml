@@ -95,7 +95,31 @@ let create_GlobalData ins outs locals =
 	in fprintf file "%s" content;
 	close_out file
 
-let compute_uniq t = ""
+let rec expr_to_string t = function
+	V(s) -> if((List.exists (fun x -> x.v_name = s) t.t_inits)
+			|| (List.exists (fun x -> x.v_name = s) t.t_others))
+			then s^"0.getT() "
+			else s
+	|Bin_op(e1, s, e2) -> "("^(expr_to_string t e1)^")"^s^"("^(expr_to_string t e2)^")"
+	|Una_op(s, e) -> s^"("^(expr_to_string t e)^")"
+	|Call(s, eL) -> s^"("^(exprL_to_string t eL)^")"
+and exprL_to_string t = function
+	[] -> ""
+	|e::[] -> expr_to_string t e
+	|e::l -> (expr_to_string t e)^", "^(exprL_to_string t l)
+
+let compute_uniq t =
+	let content assign =
+	"\t\ttry{\n\t\t"
+	^(fst assign)^"0.setT("^(expr_to_string t (snd assign))^");\n"
+	^"\t\t}catch(UnpresentSignalException e){\n\t\t"
+	^(fst assign)^"0.unsetT();\n"
+	^"\t\t}\n"
+	in let rec rule_assigns = function
+		[] -> ""
+		|a::aL -> (content a)^(rule_assigns aL)
+	in rule_assigns t.t_assigns
+	
 
 let create_thread t =
 	let content =
@@ -107,13 +131,13 @@ let create_thread t =
 		^"\t}\n\n\t@Override\n\tpublic void uniq(){\n"
 		^(compute_uniq t)
 		^"\t}\n}\n"
-	in let file = open_out "T"^(string_of_int t.t_id)^".java"
+	in let file = open_out ("T"^(string_of_int t.t_id)^".java")
 	in fprintf file "%s" content;
 	close_out file
 
 let rec create_threads = function
 	[] -> ()
-	|t::l -> (create_thread t)^(create_threads l)
+	|t::l -> (create_thread t); (create_threads l)
 
 let create_main nbThreads =
 	let content = main_to_string nbThreads
