@@ -1,3 +1,6 @@
+(*
+Compile : ocamlc ter_struc_graph.ml ter_manip_graph.ml ter_make_graph.ml
+*)
 open Ms_syntax_tree
 open SyntaxTree
 open Ms_identifier
@@ -28,7 +31,7 @@ let creerRef j a = {java = j; assigns = a; res = [];}
 	**  			sinon continuer
 	**  	sinon continuer
 	*)
-	let compute_graph param ins threads =
+	let compute_links_graph param ins threads =
 		let rec compute_links assigns =
 			let rec compute_t t =
 				let tname = t.p_path.o_name
@@ -36,9 +39,9 @@ let creerRef j a = {java = j; assigns = a; res = [];}
 				in let rec compute_t_a t a_out = function
 					V(s)->	if(s==tname)
 							then {t with p_path =
-									{tpath with o_transi_links = (
+									{tpath with o_links = (
 								(List.find (fun x -> x.p_path.o_name = a_out) threads).p_path
-							::tpath.o_transi_links) } }
+							::tpath.o_links) } }
 							else t
 					|Bin_op(e1, s, e2) -> compute_t_a (compute_t_a t a_out e1) a_out e2
 					|Una_op(s, e) -> compute_t_a t a_out e
@@ -60,24 +63,12 @@ let creerRef j a = {java = j; assigns = a; res = [];}
 			[] -> []
 			|i::ins -> (new_in_port i.v_name)::(mk_ins ins)
 		in let ins = (mk_ins param.java.j_ins)
-		in let rec threads = 
-			let thread assign =
-				let rec cmp_assign assign = 
-					let rec i_in_assign iname = function
-						V(s) -> (iname == s)
-						|Bin_op(e1, s, e2) -> (i_in_assign iname e1) || (i_in_assign iname e2)
-						|Una_op(s, e) -> (i_in_assign iname e)
-						|Call(s, eL) -> List.exists (i_in_assign iname) eL
-					in function
-					[] -> []
-					|ji::jins ->if(i_in_assign ji.in_name (snd assign))
-								then(ji::(cmp_assign assign jins))
-								else(cmp_assign assign jins)
-				in {
-					p_in = cmp_assign assign ins;
-					p_path = new_out_port (fst assign);
-				}
+		in let rec threads i = 
+			let thread i assign = {
+				p_id = i;
+				p_path = new_out_port (fst assign)(snd assign)ins;
+			}
 			in function
 			[] -> []
-			|e::l -> (thread e)::(threads l)
-		in compute_graph param ins (threads param.assigns)
+			|e::l -> (thread i e)::(threads (i+1) l)
+		in compute_links_graph param ins (threads 0 param.assigns)
